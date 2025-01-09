@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+#  hashvived The hashvive core server.
+#
+#
+# chkconfig: 345 80 20
+# description: hashvived
+# processname: hashvived
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/hashvived, see below
+if [ -f /etc/sysconfig/hashvived ]; then
+        . /etc/sysconfig/hashvived
+fi
+
+RETVAL=0
+
+prog=hashvived
+# you can override the lockfile via HASHVIVED_LOCKFILE in /etc/sysconfig/hashvived
+lockfile=${HASHVIVED_LOCKFILE-/var/lock/subsys/hashvived}
+
+# hashvived defaults to /usr/bin/hashvived, override with HASHVIVED_BIN
+hashvived=${HASHVIVED_BIN-/usr/bin/hashvived}
+
+# hashvived opts default to -disablewallet, override with HASHVIVED_OPTS
+hashvived_opts=${HASHVIVED_OPTS--disablewallet}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $hashvived $hashvived_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog -t600
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac

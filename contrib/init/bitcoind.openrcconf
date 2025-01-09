@@ -1,0 +1,33 @@
+# /etc/conf.d/hashvived: config file for /etc/init.d/hashvived
+
+# Config file location
+#HASHVIVED_CONFIGFILE="/etc/hashvive/hashvive.conf"
+
+# What directory to write pidfile to?  (created and owned by $HASHVIVED_USER)
+#HASHVIVED_PIDDIR="/var/run/hashvived"
+
+# What filename to give the pidfile
+#HASHVIVED_PIDFILE="${HASHVIVED_PIDDIR}/hashvived.pid"
+
+# Where to write hashvived data (be mindful that the blockchain is large)
+#HASHVIVED_DATADIR="/var/lib/hashvived"
+
+# User and group to own hashvived process
+#HASHVIVED_USER="hashvive"
+#HASHVIVED_GROUP="hashvive"
+
+# Path to hashvived executable
+#HASHVIVED_BIN="/usr/bin/hashvived"
+
+# Nice value to run hashvived under
+#HASHVIVED_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#HASHVIVED_OPTS=""
+
+# The timeout in seconds OpenRC will wait for hashvived to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+HASHVIVED_SIGTERM_TIMEOUT=600

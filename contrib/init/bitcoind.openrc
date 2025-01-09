@@ -1,0 +1,93 @@
+#!/sbin/openrc-run
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/hashvive/.hashvive" ]; then
+	HASHVIVED_DEFAULT_DATADIR="/var/lib/hashvive/.hashvive"
+else
+	HASHVIVED_DEFAULT_DATADIR="/var/lib/hashvived"
+fi
+
+HASHVIVED_CONFIGFILE=${HASHVIVED_CONFIGFILE:-/etc/hashvive/hashvive.conf}
+HASHVIVED_PIDDIR=${HASHVIVED_PIDDIR:-/var/run/hashvived}
+HASHVIVED_PIDFILE=${HASHVIVED_PIDFILE:-${HASHVIVED_PIDDIR}/hashvived.pid}
+HASHVIVED_DATADIR=${HASHVIVED_DATADIR:-${HASHVIVED_DEFAULT_DATADIR}}
+HASHVIVED_USER=${HASHVIVED_USER:-${HASHVIVE_USER:-hashvive}}
+HASHVIVED_GROUP=${HASHVIVED_GROUP:-hashvive}
+HASHVIVED_BIN=${HASHVIVED_BIN:-/usr/bin/hashvived}
+HASHVIVED_NICE=${HASHVIVED_NICE:-${NICELEVEL:-0}}
+HASHVIVED_OPTS="${HASHVIVED_OPTS:-${HASHVIVE_OPTS}}"
+
+name="Hashvive Daemon"
+description="hashvive cryptocurrency P2P network daemon"
+
+command="/usr/bin/hashvived"
+command_args="-pid=\"${HASHVIVED_PIDFILE}\" \
+		-conf=\"${HASHVIVED_CONFIGFILE}\" \
+		-datadir=\"${HASHVIVED_DATADIR}\" \
+		-daemon \
+		${HASHVIVED_OPTS}"
+
+required_files="${HASHVIVED_CONFIGFILE}"
+start_stop_daemon_args="-u ${HASHVIVED_USER} \
+			-N ${HASHVIVED_NICE} -w 2000"
+pidfile="${HASHVIVED_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${HASHVIVED_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${HASHVIVED_USER}:${HASHVIVED_GROUP}" \
+	"${HASHVIVED_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${HASHVIVED_USER}:${HASHVIVED_GROUP}" \
+	"${HASHVIVED_PIDDIR}"
+
+	checkpath -f \
+	-o "${HASHVIVED_USER}:${HASHVIVED_GROUP}" \
+	-m 0660 \
+	"${HASHVIVED_CONFIGFILE}"
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if grep -qs '^rpcuser=' "${HASHVIVED_CONFIGFILE}" && \
+		! grep -qs '^rpcpassword=' "${HASHVIVED_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run hashvived."
+		eerror "The setting must appear in ${HASHVIVED_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following "
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"hashvive Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}
