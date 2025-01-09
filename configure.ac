@@ -1,0 +1,11 @@
+AC_INIT([Hashvive], [1.0], [contact@hashvive.org])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIRS([m4])
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+AM_INIT_AUTOMAKE([foreign subdir-objects])
+AC_PROG_CC
+AC_PROG_CXX
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
